@@ -2,71 +2,64 @@ import { useState } from "react";
 
 export default function CartControls({
   itemAmount,
-  setItemAmount,
-  price,
-  setPrice,
+  onAdd,
+  onRemove,
+  onClear,
   onActionsCountChange,
 }) {
-  const [actionsCount, setActionsCount] = useState(0);
+  const [_actionsCount, setActionsCount] = useState(0);
   const [itemPrice, setItemPrice] = useState(100);
 
-  const handleIncrement = () => {
-    setItemAmount(itemAmount + 1);
-    setPrice(price + itemPrice);
+  const incrementActionsCount = () => {
+    setActionsCount((prev) => {
+      const next = prev + 1;
+      onActionsCountChange(next);
+      return next;
+    });
+  };
 
-    const next = actionsCount + 1;
-    setActionsCount(next);
-    onActionsCountChange(next);
+  const handleIncrement = () => {
+    onAdd(itemPrice);
+    incrementActionsCount();
   };
 
   const handleDecrement = () => {
     if (itemAmount === 0) return;
 
-    const nextItemAmount = itemAmount - 1;
-
-    if (nextItemAmount <= 0) {
-      setItemAmount(0);
-      setPrice(0);
-
-      const next = actionsCount + 1;
-      setActionsCount(next);
-      onActionsCountChange(next);
-      return;
-    }
-
-    const nextPrice = price - itemPrice;
-
-    setItemAmount(nextItemAmount);
-    setPrice(nextPrice);
-
-    const next = actionsCount + 1;
-    setActionsCount(next);
-    onActionsCountChange(next);
+    onRemove(itemPrice);
+    incrementActionsCount();
   };
 
-  const clearCart = () => {
+  const handleClear = () => {
     if (itemAmount === 0) return;
-    setItemAmount(0);
-    setPrice(0);
 
-    const next = actionsCount + 1;
-    setActionsCount(next);
-    onActionsCountChange(next);
+    onClear();
+    incrementActionsCount();
   };
 
   const handlePriceInput = (e) => {
-    +e.target.value > 0 ? setItemPrice(+e.target.value) : null;
+    const value = +e.target.value;
+    if (Number.isFinite(value) && value > 0) setItemPrice(value);
   };
 
   return (
-   <div className="cart-controls">
+    <div className="cart-controls">
       <div className="btns">
-        <button onClick={handleIncrement}>Add Item</button>
-        <button onClick={handleDecrement}>Remove Item</button>
-        <button onClick={clearCart}>Clear Cart</button>
+        <button onClick={handleIncrement}>Add Item (+{itemPrice}₴)</button>
+        <button onClick={handleDecrement} disabled={itemAmount === 0}>
+          Remove Item (-{itemPrice}₴)
+        </button>
+        <button onClick={handleClear} disabled={itemAmount === 0}>
+          Clear Cart
+        </button>
       </div>
 
-      <input type="number" onBlur={handlePriceInput} placeholder="set price" />
+      <input
+        type="number"
+        min="1"
+        onBlur={handlePriceInput}
+        placeholder="set price"
+      />
     </div>
   );
 }
